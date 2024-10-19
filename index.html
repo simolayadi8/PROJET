@@ -7,14 +7,10 @@
 
 	<title>PROJET</title>
 
-	<!-- Leaflet CSS and JS -->
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
 	<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
-
-	<!-- Leaflet Routing Machine CSS and JS -->
 	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 	<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
 	<script src="ecoles.geojson"></script>
 
 	<style>
@@ -84,18 +80,13 @@
 	</style>
 </head>
 <body>
-
-	<!-- First Header -->
 	<div class="header">
 		Ecoles Al Irfane
 	</div>
-
-	<!-- Map Container for the Schools -->
+	
 	<div class="map-container">
 		<div id="map1" style="width: 100%; height: 400px;"></div>
 	</div>
-
-	<!-- Second Header -->
 	<div class="header">
 		Direction vers IAV
 	</div>
@@ -105,23 +96,16 @@
 		<input type="text" id="start-location" placeholder="Entrez le nom d'un lieu" />
 		<button onclick="startRouting()">Obtenir l'itinéraire</button>
 	</div>
-
-	<!-- Map Container for the Directions -->
 	<div class="map-container">
 		<div id="map2" style="width: 100%; height: 400px;"></div>
 	</div>
 
 	<script>
-		// Carte centrée sur Rabat pour la première carte (Ecoles Al Irfane)
 		const map1 = L.map('map1').setView([33.976392, -6.865597], 13);
-
-		// Ajout des tuiles OpenStreetMap pour la première carte
 		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 19,
 			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(map1);
-
-		// Ajout des polygones pour visualiser les écoles
 		const polygon1 = L.polygon([
 			[33.97677044390468, -6.865765750408173],
 			[33.97668592198399, -6.8660151958465585],
@@ -149,27 +133,20 @@
 			fillOpacity: 0.5
 		}).addTo(map1);
 
-		polygon2.bindPopup("Ici c'est IAV").openPopup();
-
-		// Ajout des écoles à partir du fichier GeoJSON
+		polygon2.bindPopup("IAV").openPopup();
 		L.geoJSON(ecoles).addTo(map1);
-
-		// Popup au clic sur la carte des écoles
 		map1.on('click', function(e) {
 			alert("Latitude, Longitude : " + e.latlng.lat + ", " + e.latlng.lng);
 		});
 
 
-		// Carte centrée sur Rabat pour la deuxième carte (Itinéraire vers IAV)
 		const map2 = L.map('map2').setView([33.976392, -6.865597], 13);
 
-		// Ajout des tuiles OpenStreetMap pour la deuxième carte
 		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 19,
 			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(map2);
 
-		// Fonction pour démarrer le routage vers IAV
 		function startRouting() {
 			const startLocation = document.getElementById('start-location').value;
 
@@ -220,7 +197,6 @@
 		}
 	</script>
 
-	<!-- Explication des plugins utilisés -->
 	<div style="margin: 40px;">
 		<h3>Plugins utilisés dans cette page :</h3>
 		<ul>

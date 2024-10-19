@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<base target="_top">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>PROJET</title>
+
+	<!-- Leaflet CSS and JS -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+
+	<!-- Leaflet Routing Machine CSS and JS -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+	<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+	<script src="ecoles.geojson"></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+			font-family: 'Arial', sans-serif;
+			background-color: #f4f4f4;
+			color: #333;
+		}
+
+		.header {
+			text-align: center;
+			padding: 20px;
+			background-color: #2c3e50;
+			color: white;
+			font-size: 2em;
+			margin-bottom: 20px;
+			border-radius: 5px 5px 0 0;
+		}
+
+		.leaflet-container {
+			border: 2px solid #2c3e50;
+			border-radius: 10px;
+		}
+
+		.map-container {
+			width: 80%;
+			margin: 0 auto;
+			max-width: 1000px;
+		}
+
+		@media (max-width: 768px) {
+			.map-container {
+				width: 100%;
+			}
+		}
+
+		.leaflet-popup-content {
+			font-family: 'Arial', sans-serif;
+			font-size: 1.2em;
+		}
+
+		.input-container {
+			margin: 20px;
+			text-align: center;
+		}
+
+		input[type="text"] {
+			padding: 10px;
+			width: 300px;
+			font-size: 1em;
+		}
+
+		button {
+			padding: 10px 20px;
+			font-size: 1em;
+			background-color: #2c3e50;
+			color: white;
+			border: none;
+			cursor: pointer;
+		}
+
+		button:hover {
+			background-color: #34495e;
+		}
+	</style>
+</head>
+<body>
+
+	<!-- First Header -->
+	<div class="header">
+		Ecoles Al Irfane
+	</div>
+
+	<!-- Map Container for the Schools -->
+	<div class="map-container">
+		<div id="map1" style="width: 100%; height: 400px;"></div>
+	</div>
+
+	<!-- Second Header -->
+	<div class="header">
+		Direction vers IAV
+	</div>
+
+	<h2 style="text-align: center;">Entrez votre lieu de départ :</h2>
+	<div class="input-container">
+		<input type="text" id="start-location" placeholder="Entrez le nom d'un lieu" />
+		<button onclick="startRouting()">Obtenir l'itinéraire</button>
+	</div>
+
+	<!-- Map Container for the Directions -->
+	<div class="map-container">
+		<div id="map2" style="width: 100%; height: 400px;"></div>
+	</div>
+
+	<script>
+		// Carte centrée sur Rabat pour la première carte (Ecoles Al Irfane)
+		const map1 = L.map('map1').setView([33.976392, -6.865597], 13);
+
+		// Ajout des tuiles OpenStreetMap pour la première carte
+		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		}).addTo(map1);
+
+		// Ajout des polygones pour visualiser les écoles
+		const polygon1 = L.polygon([
+			[33.97677044390468, -6.865765750408173],
+			[33.97668592198399, -6.8660151958465585],
+			[33.976935038982724, -6.866138577461243],
+			[33.977012887895135, -6.865886449813844],
+			[33.976777116684325, -6.865771114826203]
+		], {
+			color: 'red',
+			fillColor: '#f03',
+			fillOpacity: 0.5
+		}).addTo(map1);
+
+		polygon1.bindPopup("Département topo").openPopup();
+
+		const polygon2 = L.polygon([
+			[33.98130336486332, -6.864051818847657],
+			[33.98055605007889, -6.860918998718263],
+			[33.98027135700431, -6.858901977539063],
+			[33.97148098918126, -6.86546802520752],
+			[33.970199726086356, -6.8665409088134775],
+			[33.973438437188314, -6.871647834777833]
+		], {
+			color: 'blue',
+			fillColor: '#3388ff',
+			fillOpacity: 0.5
+		}).addTo(map1);
+
+		polygon2.bindPopup("Ici c'est IAV").openPopup();
+
+		// Ajout des écoles à partir du fichier GeoJSON
+		L.geoJSON(ecoles).addTo(map1);
+
+		// Popup au clic sur la carte des écoles
+		map1.on('click', function(e) {
+			alert("Latitude, Longitude : " + e.latlng.lat + ", " + e.latlng.lng);
+		});
+
+
+		// Carte centrée sur Rabat pour la deuxième carte (Itinéraire vers IAV)
+		const map2 = L.map('map2').setView([33.976392, -6.865597], 13);
+
+		// Ajout des tuiles OpenStreetMap pour la deuxième carte
+		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		}).addTo(map2);
+
+		// Fonction pour démarrer le routage vers IAV
+		function startRouting() {
+			const startLocation = document.getElementById('start-location').value;
+
+			if (startLocation === '') {
+				alert('Veuillez entrer un lieu de départ.');
+				return;
+			}
+
+			fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${startLocation}`)
+				.then(response => response.json())
+				.then(data => {
+					if (data.length === 0) {
+						alert('Lieu non trouvé. Veuillez entrer un nom de lieu valide.');
+						return;
+					}
+
+					const startLat = parseFloat(data[0].lat);
+					const startLng = parseFloat(data[0].lon);
+
+					if (window.routingControl) {
+						map2.removeControl(window.routingControl);
+					}
+
+					window.routingControl = L.Routing.control({
+						waypoints: [
+							L.latLng(startLat, startLng),
+							L.latLng(33.976392, -6.865597)
+						],
+						lineOptions: {
+							styles: [{ color: 'blue', opacity: 1, weight: 5 }]
+						},
+						router: L.Routing.osrmv1({
+							language: 'fr',
+							profile: 'car'
+						}),
+						createMarker: function(i, waypoint, n) {
+							const markerOptions = {
+								draggable: true
+							};
+							return L.marker(waypoint.latLng, markerOptions);
+						}
+					}).addTo(map2);
+				})
+				.catch(error => {
+					console.error('Erreur lors du géocodage:', error);
+					alert('Une erreur est survenue lors de la récupération des coordonnées.');
+				});
+		}
+	</script>
+
+	<!-- Explication des plugins utilisés -->
+	<div style="margin: 40px;">
+		<h3>Plugins utilisés dans cette page :</h3>
+		<ul>
+			<li><strong>Leaflet Routing Machine :</strong> Un plugin pour Leaflet permettant d'ajouter des fonctionnalités de routage à la carte. Il permet ici de calculer un itinéraire entre un lieu d'origine et l'IAV Hassan II.</li>
+			<li><strong>Nominatim :</strong> Un service de géocodage open-source qui permet de convertir des noms de lieux en coordonnées géographiques. Utilisé pour déterminer les coordonnées à partir du nom du lieu saisi.</li>
+		</ul>
+	</div>
+</body>
+</html>
